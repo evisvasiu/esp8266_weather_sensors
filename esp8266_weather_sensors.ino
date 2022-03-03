@@ -8,6 +8,9 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+unsigned long delayTime;
+bool status;
+
 // Wifi credentials
 const char* ssid = "KabelBox-1B6C";
 const char* password = "80299875789367562743";
@@ -18,6 +21,7 @@ const char* mqtt_server = "138.3.246.220";
 // Initializes the espClient. You should change the espClient name if you have multiple ESPs running in your home automation system
 WiFiClient espClient;
 PubSubClient client(espClient);
+#define MQTTQOS1
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 
@@ -25,10 +29,6 @@ Adafruit_BME280 bme; // I2C
 //Adafruit_BME280 bme(BME_CS); // hardware SPI
 //Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK); // software SPI
 
-unsigned long delayTime;
-
-uint32_t start;
-uint32_t stop;
 SHT31 sht;
 
 // GPIO where the DS18B20 is connected to
@@ -78,7 +78,7 @@ void reconnect() {
       Serial.println("connected");  
       // Subscribe or resubscribe to a topic
       // You can subscribe to more topics (to control more LEDs in this example)
-      client.subscribe("room/lamp");
+      //client.subscribe("room/lamp");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -94,18 +94,13 @@ void setup() {
   
   setup_wifi();
   client.setServer(mqtt_server, 1883);
-  //client.setCallback(callback);
   
   Wire.begin();
   Serial.println(F("BME280 test"));
 
-  bool status;
-
-  // default settings
-  // (you can also pass in a Wire library object like &Wire2)
-  status = bme.begin(0x76);
+  status = bme.begin(0x76);   //bme I2C Address
   
-  sht.begin(0x44);    //Sensor I2C Address  
+  sht.begin(0x44);            //sht30 I2C Address  
   
   // Start the DS18B20 sensor
   sensors.begin();
@@ -130,15 +125,12 @@ void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  if(!client.loop())
-    client.connect("ESP8266Client");
-
-    
-  printValues();
-  delay(delayTime);
-
+  if(!client.loop())  
+  client.connect("ESP8266Client");
+  
   //ShT30 sensor
   sht.read();
+  delay(2000);
   Serial.print("SHT30 Temperature: ");
   Serial.print(sht.getTemperature(), 1);
   Serial.println("ºC");
@@ -146,7 +138,8 @@ void loop() {
   Serial.print(sht.getHumidity(), 1);
   Serial.print("%");
   Serial.println("\n");
-
+  delay(1000);
+  
   //DS18b20 sensor
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
@@ -155,20 +148,16 @@ void loop() {
   Serial.print(temperatureC);
   Serial.print("ºC");
   Serial.println("\n");
-
+  delay(1000);
+  
   // UV sensor
   sensorValue = analogRead(analogInPin);
   Serial.print("UV sensor: ");
   Serial.print(sensorValue);
   Serial.print("mV");
   Serial.println("\n");
-  
-  client.publish("test", "prova123");
-  
-  delay(5000);
-}
+  delay(1000);
 
-void printValues() {
   Serial.print("BME Temperature: ");
   Serial.print(bme.readTemperature());
   Serial.println("*C");
@@ -186,5 +175,6 @@ void printValues() {
   Serial.print("%");
   Serial.println("\n");
 
-  Serial.println();
+  client.publish("test", "prova123");
+
 }
