@@ -1,6 +1,3 @@
-/*********
-  Complete project details at http://randomnerdtutorials.com  
-*********/
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -11,7 +8,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-// Change the credentials below, so your ESP8266 connects to your router
+// Wifi credentials
 const char* ssid = "KabelBox-1B6C";
 const char* password = "80299875789367562743";
 
